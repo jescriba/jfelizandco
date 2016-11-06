@@ -1,0 +1,38 @@
+{
+  "create_artists": [
+    {
+      "name": "j dawgg"
+    },
+    {
+      "name": "so stock%5",
+      "description": "Soooo I loveee to describe things",
+      "private": false 
+    },
+    {
+      "name": "wuddup we gon that"
+    },
+    {
+      "name": "j dawgg again??",
+      "description": "something"
+    }
+  ],
+  "create_songs": [
+    {
+      "name": "Song for J@Dawg2",
+      "description": "Songs have descriptions"
+    },
+    {
+      "name": "Another song sequel sup",
+      "description": "this songs iight but could be edited",
+      "private": false
+    },
+    {
+      "name": "Our collab song yuh awesome",
+      "description": "This should be a shared song"
+    },
+    {
+      "name": "Share this song woot 1233",
+      "private": false
+    }
+  ]
+}
