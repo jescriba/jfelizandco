@@ -39,6 +39,8 @@ TODO - `PUT /artists/:id`
 
 `PUT /songs/:id`
 
+(UI assistance `GET /songs/:id/edit`)
+
 ## Delete
 
 **Artist**
