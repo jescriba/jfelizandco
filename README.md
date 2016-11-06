@@ -8,11 +8,13 @@ RESTful API for accessing music archive on s3
 
 `POST /artists` 
 
-(or for UI assistance `/create_artist`)
+(UI assistance `GET /create_artist`)
 
 **Song**
 
 `POST /artists/:id/songs`
+
+(UI assistance `GET /create_songs`)
 
 ## Read
 
