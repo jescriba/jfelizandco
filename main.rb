@@ -8,19 +8,17 @@ require 'data_mapper'
 require 'aws-sdk'
 require 'gon-sinatra'
 
-## TODO Add try/catch and better error messaging - also deleting nested resources
-
 if (File.exists?("config.yml"))
   yml = YAML.load_file("config.yml")
   access_key_id = yml["s3_access_key_id"]
   secret_access_key = yml["s3_secret_access_key"]
-  auth_user = yml["username"]
-  auth_password = yml["password"]
+  AUTH_USER = yml["username"]
+  AUTH_PASSWORD = yml["password"]
 else
   access_key_id = ENV["S3_ACCESS_KEY_ID"]
   secret_access_key = ENV["S3_SECRET_ACCESS_KEY"]
-  auth_user = ENV["USERNAME"]
-  auth_password = ENV["PASSWORD"]
+  AUTH_USER = ENV["USERNAME"]
+  AUTH_PASSWORD = ENV["PASSWORD"]
 end
 
 ## AWS Set up
@@ -156,7 +154,7 @@ end
 
 # Get Song For Artist
 get '/artists/:id/songs', :provides => ['html', 'json'] do
-  # TODO PRIVACY!!!
+  # TODO respect privacy property of songs 
   try(404) do
     @authorized = authorized?
     @artist = Artist.get(params[:id].to_i)
@@ -557,7 +555,7 @@ helpers do
 
   def authorized?
     @auth ||= Rack::Auth::Basic::Request.new(request.env)
-    @auth.provided? and @auth.basic? and @auth.credentials and @auth.credentials == [auth_user, auth_password]
+    @auth.provided? and @auth.basic? and @auth.credentials and @auth.credentials == [AUTH_USER, AUTH_PASSWORD]
   end
 
   def try(error_int, &block)
