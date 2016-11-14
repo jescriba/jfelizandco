@@ -512,7 +512,7 @@ end
 get '/bbjam' do
   bbjam = ["jess", "joshua", "bryan", "nathaniel"]
   try(404) do
-    songs = Song.all(:order => [:recorded_at.desc])
+    songs = Song.all(:order => [:recorded_at.desc, :name.asc])
     bbjam_songs = []
     for song in songs
       artists = song.artists.map {|artist| artist.name}
