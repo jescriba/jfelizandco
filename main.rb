@@ -158,7 +158,7 @@ get '/artists/:id/songs', :provides => ['html', 'json'] do
   try(404) do
     @authorized = authorized?
     @artist = Artist.get(params[:id].to_i)
-    @songs = @artist.songs(:order => [ :recorded_at.desc ])
+    @songs = @artist.songs(:order => [ :recorded_at.desc, :name.asc ])
     if @songs
       @songs.to_json
       erb :songs
@@ -295,7 +295,7 @@ end
 get '/songs', :provides => ['html', 'json'] do
   try(404) do
     # Handle search parameters
-    search_options = { :order => [ :recorded_at.desc ] }
+    search_options = { :order => [ :recorded_at.desc, :name.asc ] }
     artist_name = params["artist-name"] || ""
     recorded_begin = nil
     if !params["recorded-start"].nil? && !params["recorded-start"].empty?
