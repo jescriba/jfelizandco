@@ -29,6 +29,9 @@ $(window).load(function() {
   $("audio").on("ended", function() {
     updateSongDetails(nextSong());
   });
+  $("audio").on("play", function() {
+    updatePlayingState();
+  });
   $("audio").on("paused", function() {
     updatePlayingState();
   });
