@@ -1,5 +1,4 @@
 $(window).load(function() {
-  var isPlaying = false;
   var isEditing = false;
   var songs = $.parseJSON($("#json-data").html());
   var currentSongIndex = 0;
@@ -18,22 +17,18 @@ $(window).load(function() {
         break;
       }
     }
-    if (isPlaying) {
+    if (isPlaying()) {
       stopPlaying();
-      isPlaying = false;
     }
     updateSongDetails(song);
   });
   $("#play").click(function(event) {
     startPlaying();
-    isPlaying = true;
   });
   $("#pause").click(function(event) {
     stopPlaying();
-    isPlaying = false;
   });
   $("audio").on("ended", function() {
-    isPlaying = false;
     updateSongDetails(nextSong());
   });
   $("#edit").click(function(event) {
@@ -50,6 +45,10 @@ $(window).load(function() {
     });
   });
 });
+
+function isPlaying() {
+  return !$("audio").get(0).paused;
+}
 
 function stopPlaying() {
   $("#pause").hide();
