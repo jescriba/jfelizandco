@@ -32,7 +32,7 @@ $(window).load(function() {
   $("audio").on("play", function() {
     updatePlayingState();
   });
-  $("audio").on("paused", function() {
+  $("audio").on("pause", function() {
     updatePlayingState();
   });
   $("#edit").click(function(event) {
