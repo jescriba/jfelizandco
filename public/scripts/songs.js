@@ -21,6 +21,7 @@ $(window).load(function() {
       stopPlaying();
     }
     updateSongDetails(song);
+    updatePlayingState();
   });
   $("#play").click(function(event) {
     startPlaying();
@@ -30,6 +31,9 @@ $(window).load(function() {
   });
   $("audio").on("ended", function() {
     updateSongDetails(nextSong());
+  });
+  $("audio").on("paused", function() {
+    updatePlayingState();
   });
   $("#edit").click(function(event) {
     if (isEditing) {
@@ -50,22 +54,27 @@ function isPlaying() {
   return !$("audio").get(0).paused;
 }
 
-function stopPlaying() {
-  $("#pause").hide();
-  $("#play").show();
-  $("audio").get(0).pause();
+function updatePlayingState() {
+  if (isPlaying()) {
+    $("#play").hide();
+    $("#pause").show();
+  } else {
+    $("#play").show();
+    $("#pause").hide();
+  }
 }
 
 function startPlaying() {
-  $("#play").hide();
-  $("#pause").show();
   $("audio").get(0).play();
+}
+
+function stopPlaying() {
+  $("audio").get(0).pause();
 }
 
 function updateSongDetails(song) {
   $(".song-details").hide();
   $("p#" + song.id + ".song-details").show();
-  $("#play").show();
   $("audio").attr("src", song.url);
   $("#song-name").text(song.name);
 }
