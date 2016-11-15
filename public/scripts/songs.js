@@ -17,9 +17,6 @@ $(window).load(function() {
         break;
       }
     }
-    if (isPlaying()) {
-      stopPlaying();
-    }
     updateSongDetails(song);
     updatePlayingState();
   });
