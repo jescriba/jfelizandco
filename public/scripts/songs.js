@@ -2,12 +2,19 @@ $(window).load(function() {
   var isPlaying = false;
   var isEditing = false;
   var songs = $.parseJSON($("#json-data").html());
+  var currentSongIndex = 0;
+  
+  function nextSong() {
+    return songs[++currentSongIndex % songs.length];
+  }
+
   $(".btn").click(function(event) {
     var song = "";
     var id = parseInt(event.target.id);
     for(var i = 0; i < songs.length; i++) {
       if(songs[i].id == id) {
         song = songs[i]
+        currentSongIndex = i;
         break;
       }
     }
@@ -26,8 +33,8 @@ $(window).load(function() {
     isPlaying = false;
   });
   $("audio").on("ended", function() {
-    stopPlaying();
     isPlaying = false;
+    updateSongDetails(nextSong());
   });
   $("#edit").click(function(event) {
     if (isEditing) {
