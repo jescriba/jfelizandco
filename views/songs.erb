@@ -1,27 +1,15 @@
 <script src='/scripts/songs.js' type='text/javascript'></script>
 <script id="json-data"><%=@songs.to_json%></script>
-<div class="container-fluid">
-  <h1 class="text-center">songs</h1>
-  <% if @authorized %>
-    <div class="text-center" id="edit">
-      <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+<div class="list-group">
+  <% @songs.each do |song| %>
+    <div class="list-group-item list-group-item-action song-link" id=<%= "#{song.id}"%>>
+      <h5 href="#" class="list-group-item-heading"><%= song.name %></h5>
+      <p class="list-group-item-text">
+        by:
+        <% for artist in song.artists %>
+          <%= artist.name + " " %>
+        <% end %>
+      </p>
     </div>
   <% end %>
-  <div class="text-center" id="song-list">
-    <div class="btn-group-vertical" role="group" artia-label="...">
-      <% @songs.each do |song| %>
-        <div class="edit-song" id=<%= "#{song.id}"%> style="display:none;"><i class="fa fa-pencil-square-o" aria-hidden="true" id=<%= "#{song.id}"%>></i></div>
-        <button type="button" class="btn btn-default", id=<%= "#{song.id}" %>>
-          <%= song.name %>
-          <div id="share"><i class="fa fa-share" aria-hidden="true"></i></div>
-        </button>
-        <p class="song-details" id=<%= "#{song.id}"%> style="display:none;">
-        A song by 
-          <% for artist in song.artists %>
-            <%= artist.name + " " %> 
-          <% end %>
-        </p>
-      <% end %>
-    </div>
-  </div>
 </div>

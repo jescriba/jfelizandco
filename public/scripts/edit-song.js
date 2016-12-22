@@ -1,4 +1,4 @@
-$(window).load(function() {
+$(window).on("load", function() {
   var song = $.parseJSON($("#json-data").html());
   $(".fa.fa-plus").click(function(event) {
     var date = new Date();

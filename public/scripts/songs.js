@@ -1,4 +1,4 @@
-$(window).load(function() {
+$(window).on("load", function() {
   var isEditing = false;
   var songs = $.parseJSON($("#json-data").html());
   var currentSongIndex = 0;
@@ -7,9 +7,9 @@ $(window).load(function() {
     return songs[++currentSongIndex % songs.length];
   }
 
-  $(".btn").click(function(event) {
+  $(".song-link").click(function(event) {
     var song = "";
-    var id = parseInt(event.target.id);
+    var id = parseInt(event.currentTarget.id);
     for(var i = 0; i < songs.length; i++) {
       if(songs[i].id == id) {
         song = songs[i]
@@ -44,7 +44,7 @@ $(window).load(function() {
       isEditing = true;
     }
     $(".edit-song").click(function(event) {
-      var id = event.target.id;
+      var id = event.currentTarget.id;
       window.location.href = "/songs/" + id + "/edit"
     });
   });

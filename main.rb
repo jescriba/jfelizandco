@@ -76,7 +76,7 @@ end
 #
 #
 get '/' do
-  redirect to('/artists')
+  redirect '/songs'
 end
 
 # Get Artists
