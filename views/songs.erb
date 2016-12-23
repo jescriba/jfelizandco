@@ -10,6 +10,10 @@
           <%= artist.name + " " %>
         <% end %>
       </p>
+      <div class="song-details" style="display: none;" id=<%= "#{song.id}" %>>
+        <button type="button" class="btn btn-secondary" id="download">Download</button>
+        <button type="button" class="btn btn-secondary" id="share">Share</button>
+      </div>
     </div>
   <% end %>
 </div>

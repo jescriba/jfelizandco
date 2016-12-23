@@ -26,8 +26,18 @@ body > .container {
   cursor: pointer;
 }
 
+.nav-link {
+  cursor: pointer;
+}
+
 .audio-controls {
   display: inline;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.song-details {
+  padding: 10px;
 }
 
 /*html {*/

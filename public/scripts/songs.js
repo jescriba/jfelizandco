@@ -1,3 +1,5 @@
+var currentSong;
+
 $(window).on("load", function() {
   var isEditing = false;
   var songs = $.parseJSON($("#json-data").html());
@@ -6,7 +8,6 @@ $(window).on("load", function() {
   function nextSong() {
     return songs[++currentSongIndex % songs.length];
   }
-
   $(".song-link").click(function(event) {
     var song = "";
     var id = parseInt(event.currentTarget.id);
@@ -25,6 +26,12 @@ $(window).on("load", function() {
   });
   $("#pause").click(function(event) {
     stopPlaying();
+  });
+  $("#download").click(function(event) {
+    window.location = currentSong.url
+  });
+  $("#share").click(function(event) {
+    // TODO
   });
   $("audio").on("ended", function() {
     updateSongDetails(nextSong());
@@ -73,8 +80,13 @@ function stopPlaying() {
 }
 
 function updateSongDetails(song) {
-  $(".song-details").hide();
+  currentSong = song;
   $("p#" + song.id + ".song-details").show();
+  $(".song-details").hide();
+  $("div#" + song.id + ".song-details").show();
+  $(".song-link").removeClass("active");
+  $(".song-link#" + song.id).addClass("active");
   $("audio").attr("src", song.url);
   $("#song-name").text(song.name);
+  $("#download").show();
 }
