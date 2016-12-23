@@ -74,7 +74,21 @@ end
 
 ### NEW ROUTES MORE RESTFUL
 #
-#
+get '/update-content' do
+  protected!
+
+  @songs = Song.all()
+  for song in @songs 
+    if song.url.include?("jfeliz") && song.url.end_with?(".mp3")
+      s3 = Aws::S3.Resource.new(region: 'us-west-1')
+      key = song.url.split("jfeliz/")[1]
+      object = s3.bucket(bucket).object(key)
+      object.content_type = "audio/mpeg"
+      object.content_disposition = "attachment; filename=#{@song.name}.mp3"
+    end
+  end
+end
+
 get '/' do
   redirect '/songs'
 end
@@ -196,6 +210,8 @@ post '/artists/:id/songs' do
       # Handle privacy
       s3 = Aws::S3::Resource.new(region: 'us-west-1')
       s3object = s3.bucket(bucket).object("music/" + fi_path)
+      s3object.content_type = "audio/mpeg"
+      s3object.content_disposition = "attachment; filename=#{@song.name}.mp3" 
       s3object.upload_file(file_hash[:tempfile], acl: 'public-read')
       @song.url = s3object.public_url
     end
