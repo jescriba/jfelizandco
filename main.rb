@@ -23,7 +23,7 @@ end
 
 ## AWS Set up
 Aws.config.update({
-    region: 'us-west-2',
+    region: 'us-west-1',
     credentials: Aws::Credentials.new(access_key_id, secret_access_key)
 })
 bucket = 'jfeliz'
@@ -74,21 +74,6 @@ end
 
 ### NEW ROUTES MORE RESTFUL
 #
-get '/update-content' do
-  protected!
-
-  @songs = Song.all()
-  for song in @songs 
-    if song.url.include?("jfeliz") && song.url.end_with?(".mp3")
-      s3 = Aws::S3::Resource.new(region: 'us-west-1')
-      key = song.url.split("jfeliz/")[1]
-      object = s3.bucket(bucket).object(key)
-      object.content_type = "audio/mpeg"
-      object.content_disposition = "attachment; filename=#{@song.name}.mp3"
-    end
-  end
-end
-
 get '/' do
   redirect '/songs'
 end
@@ -205,7 +190,7 @@ post '/artists/:id/songs' do
         puts "invalid audio type expecting audio/mp3 got #{file_hash[:type]}"
         halt 500
       end
-      fi_path = parameterize({:artist => @artist.name, :song => @song.name, :id => @song.id}) + ".mp3"
+      fi_path = parameterize({:artist => @artist.name, :song => @song.name}) + ".mp3"
       url = "https://s3.amazonaws.com/jfeliz/music/" + fi_path
       # Handle privacy
       s3 = Aws::S3::Resource.new(region: 'us-west-1')
@@ -213,6 +198,7 @@ post '/artists/:id/songs' do
       s3object.content_type = "audio/mpeg"
       s3object.content_disposition = "attachment; filename=#{@song.name}.mp3" 
       s3object.upload_file(file_hash[:tempfile], acl: 'public-read')
+      s3object.copy_to(s3object.bucket.name + "/" + s3object.key, :metadata_directive => "REPLACE", :acl => "public-read", :content_type => "audio/mpeg", :content_disposition => "attachment; filename='#{@song.name + ".mp3"}'")
       @song.url = s3object.public_url
     end
     # Create S3 Url for song
