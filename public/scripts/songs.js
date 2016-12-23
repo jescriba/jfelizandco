@@ -27,11 +27,11 @@ $(window).on("load", function() {
   $("#pause").click(function(event) {
     stopPlaying();
   });
-  $("#download").click(function(event) {
+  $(".download").click(function(event) {
     event.preventDefault();
     window.location.href = currentSong.url;
   });
-  $("#share").click(function(event) {
+  $(".share").click(function(event) {
     // TODO
   });
   $("audio").on("ended", function() {
