@@ -28,7 +28,8 @@ $(window).on("load", function() {
     stopPlaying();
   });
   $("#download").click(function(event) {
-    window.location = currentSong.url
+    event.preventDefault();
+    window.location.href = currentSong.url;
   });
   $("#share").click(function(event) {
     // TODO
