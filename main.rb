@@ -80,7 +80,7 @@ get '/update-content' do
   @songs = Song.all()
   for song in @songs 
     if song.url.include?("jfeliz") && song.url.end_with?(".mp3")
-      s3 = Aws::S3.Resource.new(region: 'us-west-1')
+      s3 = Aws::S3::Resource.new(region: 'us-west-1')
       key = song.url.split("jfeliz/")[1]
       object = s3.bucket(bucket).object(key)
       object.content_type = "audio/mpeg"
