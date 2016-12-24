@@ -185,6 +185,10 @@ post '/artists/:id/songs' do
     @artist = Artist.get(params[:id].to_i)
     hash_params.delete(:id)
     @song = Song.new(hash_params)
+    date_match =  /\d\d-\d\d-\d{4}/.match(@song.name)
+    if date_match
+      @song.recorded_at = DateTime.parse(date_match[0])
+    end
     if !file_hash.empty?
       if file_hash[:type] != "audio/mp3"
         puts "invalid audio type expecting audio/mp3 got #{file_hash[:type]}"
