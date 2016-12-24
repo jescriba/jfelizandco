@@ -8,6 +8,9 @@ $(window).on("load", function() {
   function nextSong() {
     return songs[++currentSongIndex % songs.length];
   }
+  function lastSong() {
+    return songs[--currentSongIndex % songs.length];
+  }
   $(".song-link").click(function(event) {
     var song = "";
     var id = parseInt(event.currentTarget.id);
@@ -26,6 +29,12 @@ $(window).on("load", function() {
   });
   $("#pause").click(function(event) {
     stopPlaying();
+  });
+  $("#forward").click(function(event) {
+    updateSongDetails(nextSong());
+  });
+  $("#backward").click(function(event) {
+    updateSongDetails(lastSong());
   });
   $(".download").click(function(event) {
     event.preventDefault();
@@ -82,6 +91,8 @@ function stopPlaying() {
 
 function updateSongDetails(song) {
   currentSong = song;
+  $("#forward").show();
+  $("#backward").show();
   $("p#" + song.id + ".song-details").show();
   $(".song-details").hide();
   $("div#" + song.id + ".song-details").show();
