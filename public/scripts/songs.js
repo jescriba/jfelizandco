@@ -41,7 +41,7 @@ $(window).on("load", function() {
     window.location.href = currentSong.url;
   });
   $(".share").click(function(event) {
-    // TODO
+    window.prompt("Copy direct link to song: Ctrl+C, Enter", "jfeliz.com/songs/" + currentSong.id);
   });
   $("audio").on("ended", function() {
     updateSongDetails(nextSong());

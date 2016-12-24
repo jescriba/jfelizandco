@@ -16,6 +16,7 @@ $(window).on("load", function() {
     stopPlaying();
   });
   $(".download").click(function(event) {
+    // TODO
     event.preventDefault();
     window.location.href = currentSong.url;
   });
