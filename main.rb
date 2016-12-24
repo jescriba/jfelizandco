@@ -187,7 +187,12 @@ post '/artists/:id/songs' do
     @song = Song.new(hash_params)
     date_match =  /\d\d-\d\d-\d{4}/.match(@song.name)
     if date_match
-      @song.recorded_at = DateTime.parse(date_match[0])
+      begin
+        @song.recorded_at = DateTime.parse(date_match[0])
+      rescue ArgumentError
+        date_components = date_match[0].split("-")
+        @song.recorded_at = DateTime.parse(date_components[1] + "-" + date_components[0] + "-" + date_components[2])
+      end
     end
     if !file_hash.empty?
       if file_hash[:type] != "audio/mp3"
