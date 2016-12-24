@@ -199,8 +199,6 @@ post '/artists/:id/songs' do
       # Handle privacy
       s3 = Aws::S3::Resource.new(region: 'us-west-1')
       s3object = s3.bucket(bucket).object("music/" + fi_path)
-      s3object.content_type = "audio/mpeg"
-      s3object.content_disposition = "attachment; filename=#{@song.name}.mp3" 
       s3object.upload_file(file_hash[:tempfile], acl: 'public-read')
       s3object.copy_to(s3object.bucket.name + "/" + s3object.key, :metadata_directive => "REPLACE", :acl => "public-read", :content_type => "audio/mpeg", :content_disposition => "attachment; filename='#{@song.name + ".mp3"}'")
       @song.url = s3object.public_url
