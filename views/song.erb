@@ -1,3 +1,15 @@
-<div class="container-fluid">
+<script src='/scripts/song.js' type='text/javascript'></script>
+<script id="json-data"><%=[@song].to_json%></script>
+<div class="container">
   <h1 class="text-center"><%= @song.name %></h1>
+  <p class="list-group-item-text">
+      by:
+      <% for artist in @song.artists %>
+        <%= artist.name + " " %>
+      <% end %>
+      <br>
+      <% if @song.recorded_at %>
+      recorded: <%= @song.recorded_at.strftime("%b %d, %Y") %> 
+      <% end %>
+  </p>
 </div>
