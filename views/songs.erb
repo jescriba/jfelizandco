@@ -17,6 +17,9 @@
         <% else %>
           <i class="fa fa-heart-o favorite" aria-hidden="true" id=<%= "#{song.id}" %>></i> 
         <% end %>
+        <% if song.likes > 0 %>
+          x<%= song.likes %>
+        <% end %>
       </p>
       <div class="song-details" style="display: none;" id=<%= "#{song.id}" %>>
         <button type="button" class="btn btn-secondary download" >Download</button>
