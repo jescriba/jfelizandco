@@ -124,11 +124,10 @@ function favorite(event) {
     type: "POST",
     url: "songs/" + event.currentTarget.id + "/favorite",
     contentType: "application/json",
-    data: JSON.stringify({"id": id, "favorite": true}),
-    success: function() {
-      $("#" + event.currentTarget.id + ".fa.fa-heart-o.favorite").attr('class', 'fa fa-heart unfavorite');
-    }
+    data: JSON.stringify({"id": id, "favorite": true})
   }); 
+
+  $("#" + event.currentTarget.id + ".fa.fa-heart-o.favorite").attr('class', 'fa fa-heart unfavorite');
 }
 
 function unfavorite(event) {
@@ -137,9 +136,7 @@ function unfavorite(event) {
     type: "POST",
     url: "songs/" + event.currentTarget.id + "/favorite",
     contentType: "application/json",
-    data: JSON.stringify({"id": id, "favorite": false}),
-    success: function(){
-      $("#" + event.currentTarget.id + ".fa.fa-heart.unfavorite").attr('class', 'fa fa-heart-o favorite');
-    }
+    data: JSON.stringify({"id": id, "favorite": false})
   });
+  $("#" + event.currentTarget.id + ".fa.fa-heart.unfavorite").attr('class', 'fa fa-heart-o favorite');
 }
