@@ -31,6 +31,7 @@ $(window).on("load", function() {
     } else {
       unfavorite(event);
     }
+    event.stopPropagation();
   });
   $(".unfavorite").click(function(event) {
     if(event.currentTarget.className == "fa fa-heart unfavorite") {
@@ -38,6 +39,7 @@ $(window).on("load", function() {
     } else {
       favorite(event);
     }
+    event.stopPropagation();
   });
   $("#play").click(function(event) {
     startPlaying();
@@ -57,6 +59,7 @@ $(window).on("load", function() {
   });
   $(".share").click(function(event) {
     window.prompt("Copy direct link to song: Ctrl+C, Enter", "jfeliz.com/songs/" + currentSong.id);
+    event.stopPropagation();
   });
   $("audio").on("ended", function() {
     updateSongDetails(nextSong());
