@@ -7,7 +7,7 @@ require 'mime/types'
 
 fi = File.new('data.json')
 dict = JSON.parse(fi.read)
-auth = {:username => "joshua", :password => "admin"}
+auth = {:username => "joshua", :password => "test"}
 
 dict.keys.each do |key|
   case key 

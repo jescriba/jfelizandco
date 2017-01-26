@@ -8,7 +8,6 @@ $(window).on("load", function() {
   updatePlayingState();
   $("#forward").hide();
   $("#backward").hide();
-  
   $("#play").click(function(event) {
     startPlaying();
   });
@@ -16,7 +15,6 @@ $(window).on("load", function() {
     stopPlaying();
   });
   $(".download").click(function(event) {
-    // TODO
     event.preventDefault();
     window.location.href = currentSong.url;
   });

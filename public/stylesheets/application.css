@@ -40,6 +40,18 @@ body > .container {
   padding: 10px;
 }
 
+.fa.fa-user-circle-o {
+  padding-top: 5px;
+}
+
+.fa.fa-heart-o {
+  padding-top: 5px;
+}
+
+.fa.fa-heart {
+  padding-top: 5px;
+}
+
 /*html {*/
   /*height: 100%;*/
 /*}*/

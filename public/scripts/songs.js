@@ -24,6 +24,21 @@ $(window).on("load", function() {
     updateSongDetails(song);
     updatePlayingState();
   });
+  $(".favorite").click(function(event) {
+    // HACK: Seems like toggling classname doesn't update the event handler
+    if(event.currentTarget.className == "fa fa-heart-o favorite") {
+      favorite(event);
+    } else {
+      unfavorite(event);
+    }
+  });
+  $(".unfavorite").click(function(event) {
+    if(event.currentTarget.className == "fa fa-heart unfavorite") {
+      unfavorite(event);
+    } else {
+      favorite(event);
+    }
+  });
   $("#play").click(function(event) {
     startPlaying();
   });
@@ -101,4 +116,30 @@ function updateSongDetails(song) {
   $("audio").attr("src", song.url);
   $("#song-name").text(song.name);
   $("#download").show();
+}
+
+function favorite(event) {
+  var id = parseInt(event.currentTarget.id);
+  $.ajax({
+    type: "POST",
+    url: "songs/" + event.currentTarget.id + "/favorite",
+    contentType: "application/json",
+    data: JSON.stringify({"id": id, "favorite": true}),
+    success: function() {
+      $("#" + event.currentTarget.id + ".fa.fa-heart-o.favorite").attr('class', 'fa fa-heart unfavorite');
+    }
+  }); 
+}
+
+function unfavorite(event) {
+  var id = parseInt(event.currentTarget.id);
+  $.ajax({
+    type: "POST",
+    url: "songs/" + event.currentTarget.id + "/favorite",
+    contentType: "application/json",
+    data: JSON.stringify({"id": id, "favorite": false}),
+    success: function(){
+      $("#" + event.currentTarget.id + ".fa.fa-heart.unfavorite").attr('class', 'fa fa-heart-o favorite');
+    }
+  });
 }

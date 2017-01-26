@@ -92,6 +92,7 @@ PLATFORMS
 
 DEPENDENCIES
   aws-sdk (~> 2)
+  bcrypt
   data_mapper
   dm-postgres-adapter
   gon-sinatra

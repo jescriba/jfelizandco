@@ -1,4 +1,5 @@
 require 'sinatra'
+require 'bcrypt'
 require 'date'
 require 'pry'
 require 'yaml'
@@ -7,6 +8,8 @@ require 'json'
 require 'data_mapper'
 require 'aws-sdk'
 require 'gon-sinatra'
+
+enable :sessions
 
 if (File.exists?("config.yml"))
   yml = YAML.load_file("config.yml")
@@ -30,6 +33,23 @@ bucket = 'jfeliz'
 
 DataMapper::Logger.new($stdout, :debug)
 DataMapper.setup(:default, ENV['DATABASE_URL'] || 'postgres://localhost/jfeliz')
+
+class User
+  include DataMapper::Resource
+
+  property :id,          Serial, :unique => true
+  property :name,        String, :required => true, :unique => true, :length => 100
+  property :description, Text
+  property :password,    Text, :required => true
+  property :created_at,  DateTime
+
+  # Liked Songs
+  has n, :songs, :through => Resource
+
+  def favorites
+    songs
+  end
+end
 
 class Artist
   include DataMapper::Resource
@@ -56,6 +76,21 @@ class Song
   property :recorded_at,  DateTime
 
   has n, :artists, :through => Resource
+  has n, :users,   :through => Resource
+
+  def liked_by(user)
+    if user
+      if users.get(user.id)
+        return true
+      end
+    end
+
+    false
+  end
+
+  def likes
+    users.count
+  end
 end
 
 DataMapper.finalize
@@ -75,6 +110,62 @@ end
 ### NEW ROUTES MORE RESTFUL
 #
 get '/' do
+  redirect '/songs'
+end
+
+get '/signup' do
+  erb :signup
+end
+
+post '/signup' do
+  try(500) do
+    hash_params = hash_from_request(request)
+    crypted_password = BCrypt::Password.create(hash_params["password"])
+    @user = User.new("name" => hash_params["username"], "password" => crypted_password)
+    if @user.save
+      session[:id] = @user.id
+      @current_user = @user
+      redirect '/songs'
+    else
+      halt 500
+    end
+  end
+end
+
+get '/login' do
+  if session[:id]
+    redirect '/logout'
+  end
+  erb :login
+end
+
+post '/login' do
+  try(500) do
+    hash_params = hash_from_request(request)
+    @user = User.first(:name => hash_params["username"])
+    if @user 
+      password = BCrypt::Password.new(@user.password)
+      if password == hash_params["password"]
+        session[:id] = @user.id
+        @current_user = @user
+        redirect '/songs'
+      else
+        # TODO More session error handling
+        halt 500
+      end
+    else 
+      halt 500
+    end
+  end
+end
+
+get '/logout' do
+  erb :logout
+end
+
+post '/logout' do
+  session.clear
+  @current_user = nil
   redirect '/songs'
 end
 
@@ -156,6 +247,7 @@ get '/artists/:id/songs', :provides => ['html', 'json'] do
   # TODO respect privacy property of songs 
   try(404) do
     @authorized = authorized?
+    @current_user = current_user()
     @artist = Artist.get(params[:id].to_i)
     @songs = @artist.songs(:order => [ :recorded_at.desc, :name.asc ])
     if @songs
@@ -233,6 +325,7 @@ end
 # Get Song For Artist
 get '/artists/:id/songs/:song_id', :provides => ['html', 'json'] do
   try(404) do
+    @current_user = current_user()
     @artist = Artist.get(params[:id].to_i)
     @artist.songs.each do |song|
       if song.id == params[:song_id].to_i
@@ -303,6 +396,8 @@ end
 # Get Songs
 get '/songs', :provides => ['html', 'json'] do
   try(404) do
+    @current_user = current_user()
+
     # Handle search parameters
     search_options = { :order => [ :recorded_at.desc, :name.asc ] }
     artist_name = params["artist-name"] || ""
@@ -361,12 +456,38 @@ end
 # Get Song
 get '/songs/:id', :provides => ['html', 'json'] do
   try(404) do
+    @current_user = current_user()
     @song = Song.get(params[:id].to_i)
     if @song
       @song.to_json
       erb :song
     else
       halt 404
+    end
+  end
+end
+
+# Route to Un/Favorite songs - just requires user permission
+post '/songs/:id/favorite' do
+  content_type :json
+
+  try(500) do
+    @current_user = current_user()
+    return unless @current_user
+
+    hash_params = hash_from_request(request)
+    @song = Song.get(hash_params["id"].to_i)
+    if @song.liked_by(@current_user)
+      link = @song.song_users.first(:user => @current_user)
+      link.destroy
+    else
+      @song.users << @current_user
+    end
+
+    if @song.save
+      redirect back
+    else
+      halt 500
     end
   end
 end
@@ -535,13 +656,15 @@ get '/bbjam' do
   end
 end
 
-get '/login' do
-  protected!
-
-  redirect '/'
-end
-
 helpers do
+  def current_user()
+    if @current_user
+      @current_user
+    elsif session[:id]
+      @current_user = User.get(session[:id])
+    end
+  end
+
   def parameterize(params)
     URI.escape(params.collect{|k,v| "#{k}=#{v}"}.join('&'))
   end

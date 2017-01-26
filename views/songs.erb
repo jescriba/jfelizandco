@@ -9,6 +9,14 @@
         <% for artist in song.artists %>
           <%= artist.name + " " %>
         <% end %>
+
+      </p>
+      <p class="list-group-item-text">
+        <% if song.liked_by(@current_user) %>
+          <i class="fa fa-heart unfavorite" aria-hidden="true" id=<%= "#{song.id}" %>></i> 
+        <% else %>
+          <i class="fa fa-heart-o favorite" aria-hidden="true" id=<%= "#{song.id}" %>></i> 
+        <% end %>
       </p>
       <div class="song-details" style="display: none;" id=<%= "#{song.id}" %>>
         <button type="button" class="btn btn-secondary download" >Download</button>
