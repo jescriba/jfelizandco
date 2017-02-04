@@ -1,4 +1,5 @@
 require 'sinatra'
+require 'sinatra/contrib'
 require 'bcrypt'
 require 'date'
 require 'pry'
@@ -8,6 +9,8 @@ require 'json'
 require 'data_mapper'
 require 'aws-sdk'
 require 'gon-sinatra'
+require 'will_paginate'
+require 'will_paginate/data_mapper'
 
 enable :sessions
 
@@ -46,6 +49,8 @@ class User
   # Liked Songs
   has n, :songs, :through => Resource
 
+  self.per_page = 10
+
   def favorites
     songs
   end
@@ -62,6 +67,8 @@ class Artist
   property :created_at,  DateTime
 
   has n, :songs, :through => Resource
+
+  self.per_page = 10
 end
 
 class Song
@@ -78,6 +85,8 @@ class Song
   has n, :artists, :through => Resource
   has n, :users,   :through => Resource
 
+  self.per_page = 10
+
   def liked_by(user)
     if user
       if users.get(user.id)
@@ -90,6 +99,15 @@ class Song
 
   def likes
     users.count
+  end
+
+  def artists_array()
+    arr = []
+    artists.each do |artist|
+      arr.push(artist.attributes)
+    end
+
+    arr
   end
 end
 
@@ -249,10 +267,22 @@ get '/artists/:id/songs', :provides => ['html', 'json'] do
     @authorized = authorized?
     @current_user = current_user()
     @artist = Artist.get(params[:id].to_i)
-    @songs = @artist.songs(:order => [ :recorded_at.desc, :name.asc ])
+    @songs = @artist.songs(:order => [ :recorded_at.desc, :name.asc ]).page(params[:page])
     if @songs
-      @songs.to_json
-      erb :songs
+      respond_to do |f|
+        f.html { erb :songs }
+        f.json do 
+          songs = []
+          @songs.each do |song|
+            s = song.attributes
+            s[:liked] = song.liked_by(@current_user)
+            s[:likes] = song.likes
+            s[:artists] = song.artists_array
+            songs.push(s)
+          end
+          songs.to_json
+        end
+      end
     else
       halt 404
     end
@@ -395,6 +425,7 @@ end
 
 # Get Songs
 get '/songs', :provides => ['html', 'json'] do
+
   try(404) do
     @current_user = current_user()
 
@@ -410,7 +441,7 @@ get '/songs', :provides => ['html', 'json'] do
     if !params["recorded-end"].nil? && !params["recorded-end"].empty?
       recorded_end = DateTime.parse(params["recorded-end"])
     end
-    @songs = Song.all(search_options)
+    @songs = Song.all(search_options).page(params[:page])
     filtered_songs = []
     for song in @songs
       song_name = params["song-name"]
@@ -438,8 +469,20 @@ get '/songs', :provides => ['html', 'json'] do
     end 
     @songs = filtered_songs
     if @songs
-      @songs.to_json
-      erb :songs
+      respond_to do |f|
+        f.html { erb :songs }
+        f.json do 
+          songs = []
+          @songs.each do |song|
+            s = song.attributes
+            s[:liked] = song.liked_by(@current_user)
+            s[:likes] = song.likes
+            s[:artists] = song.artists_array
+            songs.push(s)
+          end
+          songs.to_json
+        end
+      end
     else
       halt 404
     end

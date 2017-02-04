@@ -4,6 +4,7 @@ $(window).on("load", function() {
   var isEditing = false;
   var songs = $.parseJSON($("#json-data").html());
   var currentSongIndex = 0;
+  var page = 1;
   
   function nextSong() {
     return songs[++currentSongIndex % songs.length];
@@ -11,6 +12,20 @@ $(window).on("load", function() {
   function lastSong() {
     return songs[--currentSongIndex % songs.length];
   }
+  $(window).scroll(function() {
+     if ($(window).scrollTop() + window.innerHeight == $(document).height()) {
+       page += 1;
+       $.ajax({
+         type: "GET",
+         url: "songs?page=" + page,
+         dataType: "json",
+         success: function(data) {
+           songs.concat(data);
+           addSongsHtml(data);
+         }
+       }); 
+     }
+  });
   $(".song-link").click(function(event) {
     var song = "";
     var id = parseInt(event.currentTarget.id);
@@ -142,4 +157,36 @@ function unfavorite(event) {
     data: JSON.stringify({"id": id, "favorite": false})
   });
   $("#" + event.currentTarget.id + ".fa.fa-heart.unfavorite").attr('class', 'fa fa-heart-o favorite');
+}
+
+function addSongsHtml(songs) {
+  for (var i = 0; i < songs.length; i++) {
+    var song = songs[i];
+    var artistStr = "";
+    for (var j = 0; j < song.artists.length; j++) {
+      var artist = song.artists[j];
+      artistStr += artist.name + " ";
+    }
+    var likedHtml = "";
+    if (song.liked) {
+      likedHtml = "<i class='fa fa-heart unfavorite' aria-hidden='true' id=" + song.id + "/>"
+    } else {
+      likedHtml = "<i class='fa fa-heart-o favorite' aria-hidden='true' id=" + song.id + "/>"
+    }
+    var likesStr = "";
+    if (song.likes > 0) {
+      likesStr = "x" + song.likes;
+    }
+    $("#song-list").append(
+      "<div class='list-group-item list-group-item-action song-link' id=" + song.id + ">"
+      + "<h5 href='#' class='list-group-item-heading'>" + song.name + "</h5>"
+      + "<p class='list-group-item-text'>  by: " + artistStr + "</p>"
+      + "<p class='list-group-item-text'>" + likedHtml + likesStr + "</p>"
+      + "<div class='song-details' style='display: none;' id=" + song.id + ">"
+        + "<button type='button' class='btn btn-secondary download'>Download</button>"
+        + "<button type='button' class='btn btn-secondary share'>Share</button>"
+      + "</div>"
+    + "</div>"
+    );
+  }
 }

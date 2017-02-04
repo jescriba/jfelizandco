@@ -1,6 +1,6 @@
 <script src='/scripts/songs.js' type='text/javascript'></script>
 <script id="json-data"><%=@songs.to_json%></script>
-<div class="list-group">
+<div class="list-group" id="song-list">
   <% @songs.each do |song| %>
     <div class="list-group-item list-group-item-action song-link" id=<%= "#{song.id}"%>>
       <h5 href="#" class="list-group-item-heading"><%= song.name %></h5>
