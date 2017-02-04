@@ -1,10 +1,12 @@
 var currentSong;
+var songs;
 
 $(window).on("load", function() {
   var isEditing = false;
-  var songs = $.parseJSON($("#json-data").html());
+  var isLoading = false;
   var currentSongIndex = 0;
   var page = 1;
+  songs = $.parseJSON($("#json-data").html());
   
   function nextSong() {
     return songs[++currentSongIndex % songs.length];
@@ -13,20 +15,22 @@ $(window).on("load", function() {
     return songs[--currentSongIndex % songs.length];
   }
   $(window).scroll(function() {
-     if ($(window).scrollTop() + window.innerHeight == $(document).height()) {
+     if ($(window).scrollTop() + window.innerHeight > $(document).height() - 60 && !isLoading) {
+       isLoading = true;
        page += 1;
        $.ajax({
          type: "GET",
          url: "songs?page=" + page,
          dataType: "json",
          success: function(data) {
-           songs.concat(data);
+           songs = songs.concat(data);
            addSongsHtml(data);
+           isLoading = false;
          }
        }); 
      }
   });
-  $(".song-link").click(function(event) {
+  $(document).on("click", ".song-link", function(event) {
     var song = "";
     var id = parseInt(event.currentTarget.id);
     for(var i = 0; i < songs.length; i++) {
@@ -39,7 +43,7 @@ $(window).on("load", function() {
     updateSongDetails(song);
     updatePlayingState();
   });
-  $(".favorite").click(function(event) {
+  $(document).on("click", ".favorite", function(event) {
     // HACK: Seems like toggling classname doesn't update the event handler
     if(event.currentTarget.className == "fa fa-heart-o favorite") {
       favorite(event);
@@ -48,7 +52,7 @@ $(window).on("load", function() {
     }
     event.stopPropagation();
   });
-  $(".unfavorite").click(function(event) {
+  $(document).on("click", ".unfavorite", function(event) {
     if(event.currentTarget.className == "fa fa-heart unfavorite") {
       unfavorite(event);
     } else {
@@ -56,23 +60,23 @@ $(window).on("load", function() {
     }
     event.stopPropagation();
   });
-  $("#play").click(function(event) {
+  $(document).on("click", "#play", function(event) {
     startPlaying();
   });
-  $("#pause").click(function(event) {
+  $(document).on("click", "#pause", function(event) {
     stopPlaying();
   });
-  $("#forward").click(function(event) {
+  $(document).on("click", "#forward", function(event) {
     updateSongDetails(nextSong());
   });
-  $("#backward").click(function(event) {
+  $(document).on("click", "#backward",  function(event) {
     updateSongDetails(lastSong());
   });
-  $(".download").click(function(event) {
+  $(document).on("click", ".download", function(event) {
     event.preventDefault();
     window.location.href = currentSong.url;
   });
-  $(".share").click(function(event) {
+  $(document).on("click", ".share", function(event) {
     window.prompt("Copy direct link to song: Ctrl+C, Enter", "jfeliz.com/songs/" + currentSong.id);
     event.stopPropagation();
   });
@@ -85,7 +89,7 @@ $(window).on("load", function() {
   $("audio").on("pause", function() {
     updatePlayingState();
   });
-  $("#edit").click(function(event) {
+  $("#edit").on("click", function(event) {
     if (isEditing) {
       $(".edit-song").hide();
       isEditing = false;
@@ -93,7 +97,7 @@ $(window).on("load", function() {
       $(".edit-song").show();
       isEditing = true;
     }
-    $(".edit-song").click(function(event) {
+    $(".edit-song").on("click", function(event) {
       var id = event.currentTarget.id;
       window.location.href = "/songs/" + id + "/edit"
     });
@@ -175,7 +179,7 @@ function addSongsHtml(songs) {
     }
     var likesStr = "";
     if (song.likes > 0) {
-      likesStr = "x" + song.likes;
+      likesStr = " x" + song.likes;
     }
     $("#song-list").append(
       "<div class='list-group-item list-group-item-action song-link' id=" + song.id + ">"
