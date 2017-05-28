@@ -11,6 +11,7 @@ require 'aws-sdk'
 require 'gon-sinatra'
 require 'will_paginate'
 require 'will_paginate/data_mapper'
+require 'resque'
 
 enable :sessions
 
@@ -56,6 +57,60 @@ class User
   end
 end
 
+class SongUploader
+  @queue = :song_upload
+
+  # UploadParams: file_params.merge({ :artist_name => artist_name,
+  #                                     :song_name => song_name,
+  #                                     :base_url => base_url,
+  #                                     :lossy_url => lossy_url,
+  #                                     :lossless_url => lossless_url,
+  #                                     :is_lossless => lossless_url.empty?
+  #                                  })
+  def self.perform(upload_params)
+    s3 = Aws::S3::Resource.new(region: 'us-west-1')
+
+    extension = upload_params[:filename].strip(".")[1]
+
+    if upload_params[:is_lossless]
+      lossless_object_path = upload_params[:lossless_url].chomp(upload_params[:base_url])
+      s3_lossless_object = s3.bucket(bucket).object(lossless_object_path)
+
+      # upload
+      s3_lossless_object.upload_file(upload_params[:tempfile], acl: 'public-read')
+      s3_lossless_object.copy_to("#{s3_lossless_object.bucket.name}/#{s3_lossless_object.key}",
+                              :metadata_directive => "REPLACE",
+                              :acl => "public-read",
+                              :content_type => upload_params[:type],
+                              :content_disposition => "attachment; filename='#{upload_params[:song_name]}.#{extension}'")
+
+      # transcode
+      lossy_object_path = upload_params[:lossy_url].chomp(upload_params[:base_url])
+      s3_lossy_object = s3.bucket(bucket).object(lossy_object_path)
+
+      # upload
+      transcoded_file = ""
+      s3_lossy_object.upload_file(transcoded_file, acl: 'public-read')
+      s3_lossy_object.copy_to("#{s3_lossy_object.bucket.name}/#{s3_lossy_object.key}",
+                              :metadata_directive => "REPLACE",
+                              :acl => "public-read",
+                              :content_type => "audio/mpeg",
+                              :content_disposition => "attachment; filename='#{upload_params[:song_name]}.#{extension}'")
+    else
+      lossy_object_path = upload_params[:lossy_url].chomp(upload_params[:base_url])
+      s3_lossy_object = s3.bucket(bucket).object(lossy_object_path)
+
+      # upload
+      s3_lossy_object.upload_file(upload_params[:tempfile], acl: 'public-read')
+      s3_lossy_object.copy_to("#{s3_lossy_object.bucket.name}/#{s3_lossy_object.key}",
+                              :metadata_directive => "REPLACE",
+                              :acl => "public-read",
+                              :content_type => "audio/mpeg",
+                              :content_disposition => "attachment; filename='#{upload_params[:song_name]}.#{extension}'")
+    end
+  end
+end
+
 class Artist
   include DataMapper::Resource
 
@@ -66,7 +121,24 @@ class Artist
   property :private,     Boolean, :default => true
   property :created_at,  DateTime
 
-  has n, :songs, :through => Resource
+  has n, :songs,  :through => Resource
+  has n, :albums, :through => Resource
+
+  self.per_page = 10
+end
+
+class Album
+  include DataMapper::Resource
+
+  property :id,          Serial, :unique => true
+  property :name,        String, :required => true, :unique => true, :length => 100
+  property :description, Text
+  property :private,     Boolean, :default => true
+  property :created_at,  DateTime
+  property :released_at, DateTime
+
+  has n, :songs,   :through => Resource
+  has n, :artists, :through => Resource
 
   self.per_page = 10
 end
@@ -78,12 +150,14 @@ class Song
   property :name,         String, :required => true, :length => 100
   property :description,  Text
   property :url,          Text, :unique => true
+  property :lossless_url, Text, :unique => true
   property :private,      Boolean, :default => true
   property :created_at,   DateTime
   property :recorded_at,  DateTime
 
   has n, :artists, :through => Resource
   has n, :users,   :through => Resource
+  has n, :albums,  :through => Resource
 
   self.per_page = 10
 
@@ -108,6 +182,19 @@ class Song
     end
 
     arr
+  end
+
+  def set_recorded_date
+    date_match =  /\d\d-\d\d-\d{4}/.match(self.name)
+    if date_match
+      begin
+        ## Parse in American format mm/dd/yyyy
+        self.recorded_at = DateTime.strptime(date_match[0], "%m/%d/%Y")
+      rescue ArgumentError
+        date_components = date_match[0].split("-")
+        self.recorded_at = DateTime.parse(date_components[1] + "-" + date_components[0] + "-" + date_components[2])
+      end
+    end
   end
 end
 
@@ -161,7 +248,7 @@ post '/login' do
   try(500) do
     hash_params = hash_from_request(request)
     @user = User.first(:name => hash_params["username"])
-    if @user 
+    if @user
       password = BCrypt::Password.new(@user.password)
       if password == hash_params["password"]
         session[:id] = @user.id
@@ -171,7 +258,7 @@ post '/login' do
         # TODO More session error handling
         halt 500
       end
-    else 
+    else
       halt 500
     end
   end
@@ -260,9 +347,43 @@ delete '/artists/:id/delete' do
   end
 end
 
+# Get Albums
+get '/albums', :provides => ['html', 'json'] do
+  # TODO
+end
+
+# Create Albums
+post '/artists' do
+  content_type :json
+  protected!
+
+  # TODO
+end
+
+# Get Album
+get '/albums/:id', :provides => ['html', 'json'] do
+  # TODO
+end
+
+# Edit Album
+put '/albums/:id' do
+  content_type :json
+  protected!
+
+  # TODO
+end
+
+# Delete Album
+delete '/albums/:id/delete' do
+  content_type :json
+  protected!
+
+  # TODO
+end
+
 # Get Song For Artist
 get '/artists/:id/songs', :provides => ['html', 'json'] do
-  # TODO respect privacy property of songs 
+  # TODO respect privacy property of songs
   try(404) do
     @authorized = authorized?
     @current_user = current_user()
@@ -271,7 +392,7 @@ get '/artists/:id/songs', :provides => ['html', 'json'] do
     if @songs
       respond_to do |f|
         f.html { erb :songs }
-        f.json do 
+        f.json do
           songs = []
           @songs.each do |song|
             s = song.attributes
@@ -295,58 +416,36 @@ post '/artists/:id/songs' do
   protected!
 
   try(500) do
+    # Parse params
     hash_params = hash_from_request(request)
-    hash_params = hash_params.reduce({}) do |memo, (k, v)| 
-        memo.merge({ k.to_sym => v})
-    end
-    file_hash = {}
-    if !params["file"].nil?
-      file_hash = params["file"].dup
-      hash_params.delete(:file)
-    end
-    @artist = Artist.get(params[:id].to_i)
+    file_params = hash_params[:file].dup
+    song_name = song_name_from_hash(file_params)
+    hash_params.merge!({ :name => song_name }) if song_name
+    hash_params.delete(:file)
+
+    # Get Artist
+    @artist = Artist.get(hash_params[:id].to_i)
     hash_params.delete(:id)
+
+    # Create Song and Parse Title for date
     @song = Song.new(hash_params)
-    date_match =  /\d\d-\d\d-\d{4}/.match(@song.name)
-    if date_match
-      begin
-        @song.recorded_at = DateTime.parse(date_match[0])
-      rescue ArgumentError
-        date_components = date_match[0].split("-")
-        @song.recorded_at = DateTime.parse(date_components[1] + "-" + date_components[0] + "-" + date_components[2])
-      end
-    end
-    if !file_hash.empty?
-      if file_hash[:type] != "audio/mp3"
-        puts "invalid audio type expecting audio/mp3 got #{file_hash[:type]}"
-        halt 500
-      end
-      fi_path = parameterize({:artist => @artist.name, :song => @song.name}) + ".mp3"
-      url = "https://s3.amazonaws.com/jfeliz/music/" + fi_path
-      # Handle privacy
-      s3 = Aws::S3::Resource.new(region: 'us-west-1')
-      s3object = s3.bucket(bucket).object("music/" + fi_path)
-      s3object.upload_file(file_hash[:tempfile], acl: 'public-read')
-      s3object.copy_to(s3object.bucket.name + "/" + s3object.key, :metadata_directive => "REPLACE", :acl => "public-read", :content_type => "audio/mpeg", :content_disposition => "attachment; filename='#{@song.name + ".mp3"}'")
-      @song.url = s3object.public_url
-    end
-    # Create S3 Url for song
-    if settings.development? && @song.url.nil?
-      @song.url = "test #{@artist.id} #{@song.name}"
-    end
+    @song.set_recorded_date
+
+    # Upload To S3 - Handles [aif, wav, flac, mp3]
+    # Lossless formats will transcode to have mp3 and lossless links
+    @song.url, @song.lossless_url = upload_song(file_params, @artist.name, @song.name)
+
+    # Save Song
     if @song.save
       @artist.songs << @song
       if @artist.save
         @song.to_json
       else
-        puts "artist failed to save"
-        puts @artist.errors.each do |e|
-          puts e
-        end
+        @artist.errors.each { |e| puts e }
         halt 500
       end
     else
-      @song.errors.each { |e| puts e}
+      @song.errors.each { |e| puts e }
       halt 500
     end
   end
@@ -400,7 +499,7 @@ delete '/artists/:id/songs/:song_id' do
       s3object.delete()
     end
     link = ArtistSong.get(@artist.id, @song.id)
-    if link.destroy 
+    if link.destroy
       if @song.artists.empty?
         if @song.destroy
           {:success => "ok"}.to_json
@@ -466,12 +565,12 @@ get '/songs', :provides => ['html', 'json'] do
         next
       end
       filtered_songs.push(song)
-    end 
+    end
     @songs = filtered_songs
     if @songs
       respond_to do |f|
         f.html { erb :songs }
-        f.json do 
+        f.json do
           songs = []
           @songs.each do |song|
             s = song.attributes
@@ -489,11 +588,12 @@ get '/songs', :provides => ['html', 'json'] do
   end
 end
 
-# Create Song - Eventually
+# Create Song
 post '/songs' do
   content_type :json
   protected!
-  halt 500
+
+  # TODO
 end
 
 # Get Song
@@ -539,16 +639,17 @@ put '/songs/:id' do
   content_type :json
   protected!
 
+  # TODO Refactor
   try(500) do
     hash_params = hash_from_request(request)
     artists = []
-    hash_params.keys.each do |key| 
+    hash_params.keys.each do |key|
       if key.include?("artist")
         artists.push(hash_params[key])
       end
     end
     hash_params[:artists] = artists
-    hash_params = hash_params.reduce({}) do |memo, (k, v)| 
+    hash_params = hash_params.reduce({}) do |memo, (k, v)|
       memo.merge({ k.to_sym => v})
     end
 
@@ -639,7 +740,7 @@ get '/songs/:id/edit' do
     @song.artists.each do |artist|
       @artists_name += "#{artist.name} "
     end
-    
+
     if !@song.nil?
       erb :edit_song
     else
@@ -660,16 +761,9 @@ post '/upload_songs_form' do
 
   try(500) do
     artist_name = params["artist"]
-    if params["file"][:type] != 'audio/mp3'
-      puts 'Incorrect audio type expecting audio/mp3'
-      puts 'put received ' + params["file"][:type]
-      halt 500
-    end
-    file_name = params["file"][:filename]
     @artist = Artist.first(:name => artist_name)
     env["rack.request.form_hash"].delete("artist")
     env["rack.request.form_hash"][:id] = @artist.id
-    env["rack.request.form_hash"][:name] = file_name[0..-5]
     status, headers, body = call env.merge("PATH_INFO" => "/artists/:#{@artist.id}/songs", "REQUEST_METHOD" => "POST")
     [status, headers, body.map(&:upcase)]
   end
@@ -711,14 +805,59 @@ helpers do
   def parameterize(params)
     URI.escape(params.collect{|k,v| "#{k}=#{v}"}.join('&'))
   end
-  
+
+  def upload_song(file_params, artist_name, song_name)
+    file_type = file_params[:type]
+    lossless_formats = ["audio/x-aiff", "audio/aiff", "audio/x-wav", "audio/wav", "audio/flac"]
+    lossy_formats = ["audio/mp3", "audio/mpeg"]
+    raise "Invalid audio format: #{file_type}" unless (lossless_formats + lossy_formats).include?(file_type)
+
+    base_fi_path = parameterize({ :artist => artist_name, :song => song_name })
+    base_folder = settings.development? ? "test" : "jfeliz"
+    base_url = "https://s3.amazonaws.com/#{base_folder}/music"
+    lossy_url = "#{base_url}/#{base_fi_path}.mp3"
+    lossless_url = ""
+    if lossless_formats.include?(file_type)
+      lossless_url = "#{base_url}/#{base_fi_path}." + file_params[:filename].split(".")[1]
+    end
+
+    # Schedule job
+    upload_params = file_params.merge({
+                                        :artist_name => artist_name,
+                                        :song_name => song_name,
+                                        :base_url => base_url,
+                                        :lossy_url => lossy_url,
+                                        :lossless_url => lossless_url,
+                                        :is_lossless => lossless_url.empty?
+                                     })
+    Resque.enqueue(SongUploader, upload_params)
+
+    # Return destination urls
+    [lossy_url, lossless_url]
+  end
+
+  def song_name_from_hash(file_params)
+    return nil unless file_params
+
+    file_name = file_params[:filename]
+    return nil unless file_name
+
+    # Strip off extension
+    file_name.split(".")[0]
+  end
+
   def hash_from_request(request)
+    hash_params = {}
     if request.params.keys.empty?
       # Assuming json body
       json = request.body.read
-      JSON.parse(json)
+      hash_params = JSON.parse(json)
     else
-      request.params
+      hash_params = request.params
+    end
+
+    hash_params = hash_params.reduce({}) do |memo, (k, v)|
+        memo.merge({ k.to_sym => v})
     end
   end
 
