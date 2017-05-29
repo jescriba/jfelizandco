@@ -16,6 +16,15 @@ module Globals
     AUTH_PASSWORD = ENV["PASSWORD"]
   end
 
+  if ENV["RACK_ENV"] != 'production'
+    Resque.redis = 'localhost:6379'
+  else
+    puts "Setting global redis url: #{ENV["REDISTOGO_URL"]}"
+    uri = URI.parse(ENV["REDISTOGO_URL"])
+    Resque.redis = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
+  end
+
+
   Aws.config.update({
       region: 'us-west-1',
       credentials: Aws::Credentials.new(access_key_id, secret_access_key)
