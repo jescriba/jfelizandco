@@ -1,3 +1,15 @@
-require './main'
-Sinatra::register Gon::Sinatra
-run Sinatra::Application
+require 'resque/server'
+require_relative 'main'
+require_relative 'globals'
+
+map "/resque" do
+  Resque::Server.use Rack::Auth::Basic do |username, password|
+    [username, password] == [Globals::AUTH_USER, Globals::AUTH_PASSWORD]
+  end
+
+  run Resque::Server
+end
+
+map "/" do
+  run Main
+end
