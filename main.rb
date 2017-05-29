@@ -779,7 +779,7 @@ class Main < Sinatra::Base
       end
 
       temp_fi_basename = File.basename(file_params[:tempfile], extension)
-      copied_fi_path = "#{Dir.pwd}/tmp/#{temp_fi_basename}-copy#{extension}"
+      copied_fi_path = "/tmp/#{temp_fi_basename}-copy#{extension}"
       puts "Copying tempfile: #{file_params[:tempfile].path} to location: #{copied_fi_path}"
       FileUtils.cp(file_params[:tempfile].path, copied_fi_path)
       raise "Failed copying file" unless File.exists?(copied_fi_path)
