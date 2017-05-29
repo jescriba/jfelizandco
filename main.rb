@@ -441,7 +441,7 @@ class Main < Sinatra::Base
         extensions.push(File.extname(lossy_url)) unless lossy_url.empty?
 
         for ext in extensions
-          relative_path = "#{relative_s3_path(@artist.name, @song.name, @song.id)}#{ext}"
+          relative_path = "#{relative_s3_path(@artist.name, @song.name)}#{ext}"
           s3 = Aws::S3::Resource.new(region: 'us-west-1')
           s3object = s3.bucket(BUCKET).object("music/" + relative_path)
           s3object.delete()
@@ -642,7 +642,7 @@ class Main < Sinatra::Base
         extensions.push(File.extname(lossless_url)) unless lossless_url.empty?
         extensions.push(File.extname(lossy_url)) unless lossy_url.empty?
         for ext in extensions
-          relative_path = "#{relative_s3_path(@artist.name, @song.name, @song.id)}#{ext}"
+          relative_path = "#{relative_s3_path(@artist.name, @song.name)}#{ext}"
           s3 = Aws::S3::Resource.new(region: 'us-west-1')
           s3object = s3.bucket(BUCKET).object("music/" + relative_path)
           s3object.delete()
