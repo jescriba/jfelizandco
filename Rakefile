@@ -28,8 +28,7 @@ task :reset_db do
   end 
 end
 
-namespace :resque do
-  task :setup do
+task "resque:setup" => :environment do
     require 'resque'
     ENV['QUEUE'] = '*'
 
@@ -39,5 +38,4 @@ namespace :resque do
       uri = URI.parse(ENV["REDISTOGO_URL"])
       Resque.redis = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
     end
-  end
 end
