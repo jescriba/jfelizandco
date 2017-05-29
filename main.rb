@@ -380,10 +380,12 @@ class Main < Sinatra::Base
         if @artist.save
           @song.to_json
         else
+          puts "ERROR - failed saving artist"
           @artist.errors.each { |e| puts e }
           halt 500
         end
       else
+        puts "ERROR - failed saving song"
         @song.errors.each { |e| puts e }
         halt 500
       end
@@ -842,6 +844,9 @@ class Main < Sinatra::Base
       begin
         block.call
       rescue StandardError => e
+        puts "###############"
+        puts "#### ERROR ####"
+        puts "###############"
         puts e.to_s
         halt error_int
       end
