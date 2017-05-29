@@ -1,4 +1,5 @@
 require 'aws-sdk'
+require 'resque'
 require 'yaml'
 
 module Globals
