@@ -27,3 +27,17 @@ task :reset_db do
     puts "Skipped"
   end 
 end
+
+namespace :resque do
+  task :setup do
+    require 'resque'
+    ENV['QUEUE'] = '*'
+
+    if ENV["RACK_ENV"] != 'production'
+      Resque.redis = 'localhost:6379'
+    else
+      uri = URI.parse(ENV["REDISTOGO_URL"])
+      Resque.redis = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
+    end
+  end
+end
