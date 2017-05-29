@@ -112,6 +112,10 @@ class Song
     arr
   end
 
+  def lossy_url
+    self.url
+  end
+
   def set_recorded_date
     date_match =  /\d\d-\d\d-\d{4}/.match(self.name)
     if date_match
@@ -136,6 +140,8 @@ class Main < Sinatra::Base
   include Globals
   register Sinatra::Contrib
   register Gon::Sinatra
+
+  BASE_URL = "https://s3-us-west-1.amazonaws.com/jfeliz/"
 
   error do
     '~~~ sorry :| ~~~'
@@ -426,10 +432,18 @@ class Main < Sinatra::Base
       end
       if !@song.url.nil?
         # destroy from s3
-        fi_path = parameterize({:artist => @artist.name, :song => @song.name, :id => @song.id}) + ".mp3"
-        s3 = Aws::S3::Resource.new(region: 'us-west-1')
-        s3object = s3.bucket(BUCKET).object("music/" + fi_path)
-        s3object.delete()
+        lossy_url = @song.lossy_url
+        lossless_url = @song.lossless_url
+        extensions = []
+        extensions.push(File.extname(lossless_url)) unless lossless_url.empty?
+        extensions.push(File.extname(lossy_url)) unless lossy_url.empty?
+
+        for ext in extensions
+          relative_path = "#{relative_s3_path(@artist.name, @song.name, @song.id)}#{ext}"
+          s3 = Aws::S3::Resource.new(region: 'us-west-1')
+          s3object = s3.bucket(BUCKET).object("music/" + relative_path)
+          s3object.delete()
+        end
       end
       link = ArtistSong.get(@artist.id, @song.id)
       if link.destroy
@@ -620,10 +634,18 @@ class Main < Sinatra::Base
     try(500) do
       @song = Song.get(params[:id].to_i)
       @song.artists.each do |artist|
-        fi_path = parameterize({:artist => artist.name, :song => @song.name, :id => @song.id}) + ".mp3"
-        s3 = Aws::S3::Resource.new(region: 'us-west-1')
-        s3object = s3.bucket(BUCKET).object("music/" + fi_path)
-        s3object.delete()
+        lossy_url = @song.lossy_url
+        lossless_url = @song.lossless_url
+        extensions = []
+        extensions.push(File.extname(lossless_url)) unless lossless_url.empty?
+        extensions.push(File.extname(lossy_url)) unless lossy_url.empty?
+        for ext in extensions
+          relative_path = "#{relative_s3_path(@artist.name, @song.name, @song.id)}#{ext}"
+          s3 = Aws::S3::Resource.new(region: 'us-west-1')
+          s3object = s3.bucket(BUCKET).object("music/" + relative_path)
+          s3object.delete()
+        end
+
         link = ArtistSong.get(artist.id, @song.id)
         link.destroy
       end
@@ -647,11 +669,11 @@ class Main < Sinatra::Base
 
   # Frontend UI For Post / Edit
 
-  get '/create_artist' do
+  get '/artist/create' do
     erb :create_artist
   end
 
-  get '/create_songs' do
+  get '/song/create' do
     erb :create_songs
   end
 
@@ -735,8 +757,8 @@ class Main < Sinatra::Base
       end
     end
 
-    def parameterize(params)
-      URI.escape(params.collect{|k,v| "#{k}=#{v}"}.join('&'))
+    def relative_s3_path(artist_name, song_name)
+      "#{URI.escape(artist_name)}/#{URI.escape(song_name)}"
     end
 
     def upload_song(file_params, artist_name, song_name)
@@ -745,18 +767,16 @@ class Main < Sinatra::Base
       lossy_formats = ["audio/mp3", "audio/mpeg"]
       raise "Invalid audio format: #{file_type}" unless (lossless_formats + lossy_formats).include?(file_type)
 
-      base_fi_path = parameterize({ :artist => artist_name, :song => song_name })
+      base_fi_path = relative_s3_path(artist_name, song_name)
       base_folder = settings.development? ? "test/" : ""
-      base_url = "https://s3.amazonaws.com/jfeliz/"
-      lossy_url = "#{base_url}#{base_folder}music/#{base_fi_path}.mp3"
+      lossy_url = "#{BASE_URL}#{base_folder}music/#{base_fi_path}.mp3"
       lossless_url = ""
       extension = File.extname(file_params[:tempfile])
       if lossless_formats.include?(file_type)
-        lossless_url = "#{base_url}#{base_folder}music/#{base_fi_path}#{extension}"
+        lossless_url = "#{BASE_URL}#{base_folder}music/#{base_fi_path}#{extension}"
       end
 
       temp_fi_basename = File.basename(file_params[:tempfile], extension)
-      temp_fi_dirname = File.dirname(file_params[:tempfile])
       copied_fi_path = "#{Dir.pwd}/tmp/#{temp_fi_basename}-copy#{extension}"
       FileUtils.cp(file_params[:tempfile].path, copied_fi_path)
 
@@ -764,7 +784,7 @@ class Main < Sinatra::Base
       upload_params = file_params.merge({
                                           :artist_name => artist_name,
                                           :song_name => song_name,
-                                          :base_url => base_url,
+                                          :base_url => BASE_URL,
                                           :lossy_url => lossy_url,
                                           :lossless_url => lossless_url,
                                           :is_lossless => !lossless_url.empty?,
@@ -772,8 +792,14 @@ class Main < Sinatra::Base
                                        })
       Resque.enqueue(SongUploader, upload_params)
 
-      # Return destination urls
-      [lossy_url, lossless_url]
+      # Return public destination urls
+      lossy_public_url = public_url(artist_name, song_name, ".mp3", base_folder)
+      lossless_public_url = public_url(artist_name, song_name, extension, base_folder)
+      [lossy_public_url, lossless_public_url]
+    end
+
+    def public_url(artist_name, song_name, extension, base_folder)
+      "#{BASE_URL}#{base_folder}music/#{CGI::escape(URI.escape(artist_name))}/#{CGI::escape(URI.escape(song_name))}#{extension}"
     end
 
     def song_name_from_hash(file_params)

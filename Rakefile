@@ -4,6 +4,7 @@ require 'data_mapper'
 require 'pg'
 
 
+desc "create db"
 task :create_db do
   if ENV["RACK_ENV"] != "production"
     conn = PG.connect(dbname: 'postgres')
@@ -13,4 +14,16 @@ task :create_db do
   else
     puts "Skipped auto_migration - in production env"
   end
+end
+
+desc "Drop and create db then add test user"
+task :reset_db do
+ if ENV["RACK_ENV"] != "production"
+    conn = PG.connect(dbname: 'postgres')
+    conn.exec("DROP DATABASE jfeliz")
+    puts "dropped the jfeliz DB"
+    Rake::Task["create_db"].invoke
+  else
+    puts "Skipped"
+  end 
 end

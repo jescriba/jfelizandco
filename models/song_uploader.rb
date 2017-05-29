@@ -33,21 +33,29 @@ class SongUploader
                               :content_type => upload_params[:type],
                               :content_disposition => "attachment; filename='#{upload_params[:song_name]}#{extension}'")
 
-      # TODO Transcode
-      # # transcode
-      # lossy_object_path = upload_params[:lossy_url].chomp(upload_params[:base_url])
-      # s3_lossy_object = s3.bucket(BUCKET).object(lossy_object_path)
-      #
-      # # upload
-      # transcoded_file = ""
-      # s3_lossy_object.upload_file(transcoded_file, acl: 'public-read')
-      # s3_lossy_object.copy_to("#{s3_lossy_object.bucket.name}/#{s3_lossy_object.key}",
-      #                         :metadata_directive => "REPLACE",
-      #                         :acl => "public-read",
-      #                         :content_type => "audio/mpeg",
-      #                         :content_disposition => "attachment; filename='#{upload_params[:song_name]}#{extension}'")
+      # transcode to V0 mp3
+      temp_fi_dirname = File.dirname(upload_params[:tempfile_path])
+      lossy_file_path = "#{temp_fi_dirname}/#{upload_params[:song_name]}.mp3"
+      cmd = "ffmpeg -i #{upload_params[:tempfile_path]} -codec:a libmp3lame -qscale:a 0 #{lossy_file_path}"
+      `#{cmd}`
+      lossy_file = File.new(lossy_file_path, "r")
+
+      # upload lossy
+      lossy_object_path = upload_params[:lossy_url].sub(upload_params[:base_url], "")
+      s3_lossy_object = s3.bucket(BUCKET).object(lossy_object_path)
+
+      # upload
+      s3_lossy_object.upload_file(lossy_file, acl: 'public-read')
+      s3_lossy_object.copy_to("#{s3_lossy_object.bucket.name}/#{s3_lossy_object.key}",
+                              :metadata_directive => "REPLACE",
+                              :acl => "public-read",
+                              :content_type => "audio/mpeg",
+                              :content_disposition => "attachment; filename='#{upload_params[:song_name]}#{extension}'")
+
+      # Clean up lossy temp file
+      FileUtils.rm(lossy_file_path)
     else
-      lossy_object_path = upload_params[:lossy_url].chomp(upload_params[:base_url])
+      lossy_object_path = upload_params[:lossy_url].sub(upload_params[:base_url], "")
       s3_lossy_object = s3.bucket(BUCKET).object(lossy_object_path)
 
       # upload
