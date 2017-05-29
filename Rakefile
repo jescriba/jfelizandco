@@ -28,7 +28,7 @@ task :reset_db do
   end 
 end
 
-task "resque:setup" => :environment do
+task "resque:setup" do
     require 'resque'
     ENV['QUEUE'] = '*'
 
