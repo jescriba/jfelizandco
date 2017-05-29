@@ -29,13 +29,15 @@ task :reset_db do
 end
 
 task "resque:setup" do
-    require 'resque'
-    ENV['QUEUE'] = '*'
+  require 'resque'
+  ENV['QUEUE'] = '*'
 
-    if ENV["RACK_ENV"] != 'production'
-      Resque.redis = 'localhost:6379'
-    else
-      uri = URI.parse(ENV["REDISTOGO_URL"])
-      Resque.redis = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
-    end
+  puts "Checking redis env: #{ENV["RACK_ENV"]}"
+  if ENV["RACK_ENV"] != 'production'
+    Resque.redis = 'localhost:6379'
+  else
+    puts "Setting production url"
+    uri = URI.parse(ENV["REDISTOGO_URL"])
+    Resque.redis = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
+  end
 end
