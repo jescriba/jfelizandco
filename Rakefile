@@ -1,5 +1,8 @@
+require_relative 'models/song_uploader'
+require 'resque/tasks'
 require 'data_mapper'
 require 'pg'
+
 
 task :create_db do
   if ENV["RACK_ENV"] != "production"
