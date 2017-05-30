@@ -1,4 +1,4 @@
-require_relative 'models/song_uploader'
+require_relative 'models/song_transcoder'
 require_relative 'globals'
 require 'sinatra'
 require 'sinatra/contrib'
@@ -784,21 +784,40 @@ class Main < Sinatra::Base
       FileUtils.cp(file_params[:tempfile].path, copied_fi_path)
       raise "Failed copying file" unless File.exists?(copied_fi_path)
 
+      # Encode for s3 public url
+      lossy_public_url = public_url(artist_name, song_name, ".mp3", base_folder)
+      lossless_public_url = ""
+      if !lossless_url.empty?
+        lossless_public_url = public_url(artist_name, song_name, extension, base_folder)
+      end
+
       # Schedule job
       upload_params = file_params.merge({
                                           :artist_name => artist_name,
                                           :song_name => song_name,
                                           :base_url => BASE_URL,
                                           :lossy_url => lossy_url,
-                                          :lossless_url => lossless_url,
+                                          :lossless_url => lossless_public_url,
                                           :is_lossless => !lossless_url.empty?,
                                           :tempfile_path => copied_fi_path
                                        })
-      Resque.enqueue(SongUploader, upload_params)
+
+     s3 = Aws::S3::Resource.new(region: 'us-west-1')
+     s3_object_path = upload_params[:lossless_url].sub(upload_params[:base_url], "")
+     s3_object = s3.bucket(BUCKET).object(s3_object_path)
+
+     # upload
+     s3_lossless_object.upload_file(tempfile, acl: 'public-read')
+     s3_lossless_object.copy_to("#{s3_lossless_object.bucket.name}/#{s3_lossless_object.key}",
+                             :metadata_directive => "REPLACE",
+                             :acl => "public-read",
+                             :content_type => upload_params[:type],
+                             :content_disposition => "attachment; filename='#{upload_params[:song_name]}#{extension}'")
+      if !lossless_url.empty?
+        Resque.enqueue(SongTranscoder, upload_params)
+      end
 
       # Return public destination urls
-      lossy_public_url = public_url(artist_name, song_name, ".mp3", base_folder)
-      lossless_public_url = public_url(artist_name, song_name, extension, base_folder)
       [lossy_public_url, lossless_public_url]
     end
 
