@@ -20,7 +20,7 @@ class SongTranscoder
     upload_params = upload_params.reduce({}) { |memo, (k, v)| memo.merge({ k.to_sym => v}) }
     extension = File.extname(upload_params[:lossless_url])
     # Download s3 lossless to local
-    upload_params[:tempfile_path] = "#{Dir.pwd}/tmp/temp#{extension}"
+    upload_params[:tempfile_path] = "/app/tmp/temp#{extension}"
     download_cmd_str = "curl -o #{upload_params[:tempfile_path]} #{upload_params[:lossless_url]}"
     download_cmd =  `#{download_cmd_str}`
     tempfile = File.new(upload_params[:tempfile_path], "r")
