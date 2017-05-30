@@ -1,4 +1,4 @@
-require_relative 'models/song_uploader'
+require_relative 'models/song_transcoder'
 require 'resque/tasks'
 require 'data_mapper'
 require 'pg'
