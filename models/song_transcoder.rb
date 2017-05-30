@@ -12,7 +12,6 @@ class SongTranscoder
   #                                     :lossy_url => lossy_url,
   #                                     :lossless_url => lossless_url,
   #                                     :is_lossless => lossless_url.empty?,
-  #                                     :tempfile_path => file_params[:tempfile].path
   #                                  })
   def self.perform(upload_params)
     s3 = Aws::S3::Resource.new(region: 'us-west-1')

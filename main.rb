@@ -779,10 +779,6 @@ class Main < Sinatra::Base
       end
 
       temp_fi_basename = File.basename(file_params[:tempfile], extension)
-      copied_fi_path = "/tmp/#{temp_fi_basename}-copy#{extension}"
-      puts "Copying tempfile: #{file_params[:tempfile].path} to location: #{copied_fi_path}"
-      FileUtils.cp(file_params[:tempfile].path, copied_fi_path)
-      raise "Failed copying file" unless File.exists?(copied_fi_path)
 
       # Encode for s3 public url
       lossy_public_url = public_url(artist_name, song_name, ".mp3", base_folder)
@@ -799,7 +795,6 @@ class Main < Sinatra::Base
                                           :lossy_url => lossy_url,
                                           :lossless_url => lossless_public_url,
                                           :is_lossless => !lossless_url.empty?,
-                                          :tempfile_path => copied_fi_path
                                        })
 
      s3 = Aws::S3::Resource.new(region: 'us-west-1')
@@ -807,8 +802,8 @@ class Main < Sinatra::Base
      s3_object = s3.bucket(BUCKET).object(s3_object_path)
 
      # upload
-     s3_lossless_object.upload_file(tempfile, acl: 'public-read')
-     s3_lossless_object.copy_to("#{s3_lossless_object.bucket.name}/#{s3_lossless_object.key}",
+     s3_object.upload_file(file_params[:tempfile], acl: 'public-read')
+     s3_object.copy_to("#{s3_object.bucket.name}/#{s3_object.key}",
                              :metadata_directive => "REPLACE",
                              :acl => "public-read",
                              :content_type => upload_params[:type],
