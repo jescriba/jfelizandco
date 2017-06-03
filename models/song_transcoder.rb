@@ -42,7 +42,7 @@ class SongTranscoder
                             :metadata_directive => "REPLACE",
                             :acl => "public-read",
                             :content_type => "audio/mpeg",
-                            :content_disposition => "attachment; filename='#{upload_params[:song_name]}#{extension}'")
+                            :content_disposition => "attachment; filename='#{upload_params[:song_name]}.mp3'")
 
     # Clean up lossy temp file
     FileUtils.rm(lossy_file_path)
