@@ -9,7 +9,13 @@
       <% end %>
       <br>
       <% if @song.recorded_at %>
-      recorded: <%= @song.recorded_at.strftime("%b %d, %Y") %> 
+      recorded: <%= @song.recorded_at.strftime("%b %d, %Y") %>
       <% end %>
+      <br>
+      Download:
+      <% if @song.lossless_url %>
+        <button type="button" class="btn btn-outline-primary" id="lossless-download">Lossless</button>
+      <% end %>
+      <button type="button" class="btn btn-outline-primary" id="lossy-download">Lossy</button>
   </p>
 </div>

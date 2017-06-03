@@ -14,7 +14,11 @@ $(window).on("load", function() {
   $("#pause").click(function(event) {
     stopPlaying();
   });
-  $(".download").click(function(event) {
+  $("#lossless-download").click(function(event) {
+    event.preventDefault();
+    window.location.href = currentSong.lossless_url;
+  });
+  $("#lossy-download").click(function(event) {
     event.preventDefault();
     window.location.href = currentSong.url;
   });
