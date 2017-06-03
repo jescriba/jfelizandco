@@ -7,7 +7,7 @@ $(window).on("load", function() {
   var currentSongIndex = 0;
   var page = 1;
   songs = $.parseJSON($("#json-data").html());
-  
+
   function nextSong() {
     return songs[++currentSongIndex % songs.length];
   }
@@ -27,7 +27,7 @@ $(window).on("load", function() {
            addSongsHtml(data);
            isLoading = false;
          }
-       }); 
+       });
      }
   });
   $(document).on("click", ".song-link", function(event) {
@@ -77,7 +77,7 @@ $(window).on("load", function() {
     window.location.href = currentSong.url;
   });
   $(document).on("click", ".share", function(event) {
-    window.prompt("Copy direct link to song: Ctrl+C, Enter", "jfeliz.com/songs/" + currentSong.id);
+    window.prompt("Copy direct link to song: Command+C, Enter", "jfeliz.com/songs/" + currentSong.id);
     event.stopPropagation();
   });
   $("audio").on("ended", function() {
@@ -147,7 +147,7 @@ function favorite(event) {
     url: "songs/" + event.currentTarget.id + "/favorite",
     contentType: "application/json",
     data: JSON.stringify({"id": id, "favorite": true})
-  }); 
+  });
 
   $("#" + event.currentTarget.id + ".fa.fa-heart-o.favorite").attr('class', 'fa fa-heart unfavorite');
 }

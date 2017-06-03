@@ -8,6 +8,33 @@ body > .container {
   padding: 60px 15px;
 }
 
+#content {
+  margin: 2rem auto;
+  max-width: 40rem;
+  padding: 20px;
+}
+
+.container {
+  max-width: 46rem;
+}
+
+.header {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: .05rem solid #e5e5e5;
+  top: 0;
+  right: 0;
+  left: 0;
+  padding: 2px;
+  margin: auto;
+  max-width: 46rem;
+  position: fixed;
+}
+
+.float-right {
+  float: right!important;
+}
+
 .footer {
   position: fixed;
   bottom: 0;
@@ -50,6 +77,12 @@ body > .container {
 
 .fa.fa-heart {
   padding-top: 5px;
+}
+
+.form-signin {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
 }
 
 /*html {*/

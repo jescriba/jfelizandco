@@ -1,15 +1,9 @@
-<div class="container">
-  <h1 class="text-center">Sign Up</h1>
-  <form method="post" action="/signup" enctype='application/x-www-form-urlencoded' id="signup">
-    <div class="form-group">
-      <label for="username">Username</label>
-      <input type="username" class="form-control" name="username" placeholder="username">
-    </div>
-    <div class="form-group">
-      <label for="password">Password</label>
-      <input type="password" class="form-control" name="password" placeholder="password">
-    </div>
-    <button type="submit" class="btn btn-default">sign up</button>
-  </form>
+<form method="post" action="/signup" enctype='application/x-www-form-urlencoded' class="form-signin" id="signup">
+  <h2 class="form-signin-heading">Sign Up</h2>
+  <label for="username" class="sr-only">Username</label>
+  <input type="username" class="form-control" name="username" placeholder="username">
+  <label for="password" class="sr-only">Password</label>
+  <input type="password" class="form-control" name="password" placeholder="password">
+  <button type="submit" class="btn btn-lg btn-primary btn-block">Sign Up</button>
   <p>Already have an account? <a href="/login">Login</a></p>
-</div>
+</form>

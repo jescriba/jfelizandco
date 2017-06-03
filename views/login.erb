@@ -1,17 +1,9 @@
-<div class="container">
-  <div class="text-center">
-    <h1 class="text-center">Login</h1>
-    <form method="post" action="/login" id="login">
-      <div class="form-group">
-        <label for="username">Username</label>
-        <input type="username" class="form-control" name="username" placeholder="username"/>
-      </div>
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" class="form-control" name="password" placeholder="password"/>
-      </div>
-      <button type="submit" class="btn btn-default">login</button>
-    </form>
-    <p>Don't have an account? <a href="/signup">Sign Up</a></p>
-  </div>
-</div>
+<form method="post" action="/login" class="form-signin" id="login">
+  <h2 class="form-signin-heading">Login</h2>
+  <label for="username" class="sr-only">Username</label>
+  <input type="username" class="form-control" name="username" placeholder="username"/>
+  <label for="password" class="sr-only">Password</label>
+  <input type="password" class="form-control" name="password" placeholder="password"/>
+  <button type="submit" class="btn btn-lg btn-primary btn-block">Login</button>
+  <p>Don't have an account? <a href="/signup">Sign Up</a></p>
+</form>

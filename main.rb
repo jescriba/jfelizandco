@@ -287,8 +287,9 @@ class Main < Sinatra::Base
   end
 
   # Get Albums
-  get '/albums', :provides => ['html', 'json'] do
+  get '/albums' do
     # TODO
+    erb :albums
   end
 
   # Create Albums

@@ -3,7 +3,7 @@
 <div class="list-group" id="song-list">
   <% @songs.each do |song| %>
     <div class="list-group-item list-group-item-action song-link" id=<%= "#{song.id}"%>>
-      <h5 href="#" class="list-group-item-heading"><%= song.name %></h5>
+      <h5 href="#" class="list-group-item-heading text-center"><%= song.name %></h5>
       <p class="list-group-item-text">
         by:
         <% for artist in song.artists %>
@@ -13,13 +13,14 @@
       </p>
       <p class="list-group-item-text">
         <% if song.liked_by(@current_user) %>
-          <i class="fa fa-heart unfavorite" aria-hidden="true" id=<%= "#{song.id}" %>></i> 
+          <i class="fa fa-heart unfavorite" aria-hidden="true" id=<%= "#{song.id}" %>></i>
         <% else %>
-          <i class="fa fa-heart-o favorite" aria-hidden="true" id=<%= "#{song.id}" %>></i> 
+          <i class="fa fa-heart-o favorite" aria-hidden="true" id=<%= "#{song.id}" %>></i>
         <% end %>
         <% if song.likes > 0 %>
           x<%= song.likes %>
         <% end %>
+        <a href=<%= "songs/#{song.id}" %>><i class="fa fa-info-circle" aria-hidden="true"></i></a>
       </p>
       <div class="song-details" style="display: none;" id=<%= "#{song.id}" %>>
         <button type="button" class="btn btn-secondary download" >Download</button>
