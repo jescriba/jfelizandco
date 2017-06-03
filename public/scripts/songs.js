@@ -184,8 +184,11 @@ function addSongsHtml(songs) {
     $("#song-list").append(
       "<div class='list-group-item list-group-item-action song-link' id=" + song.id + ">"
       + "<h5 href='#' class='list-group-item-heading'>" + song.name + "</h5>"
-      + "<p class='list-group-item-text'>  by: " + artistStr + "</p>"
-      + "<p class='list-group-item-text'>" + likedHtml + likesStr + "</p>"
+      + "<p>"
+      + "<p class='list-group-item-text'>  by: " + artistStr
+      + "<p class='list-group-item-text'>" + likedHtml + likesStr + " "
+      + "<a href='songs/'" + song.id + "><i class='fa fa-info-circle' aria-hidden='true'></i></a>"
+      + "</p>"
       + "<div class='song-details' style='display: none;' id=" + song.id + ">"
         + "<button type='button' class='btn btn-secondary download'>Download</button>"
         + "<button type='button' class='btn btn-secondary share'>Share</button>"

@@ -15,8 +15,6 @@ require 'will_paginate/data_mapper'
 require 'resque'
 require 'fileutils'
 
-enable :sessions
-
 DataMapper::Logger.new($stdout, :debug)
 DataMapper.setup(:default, ENV['DATABASE_URL'] || 'postgres://localhost/jfeliz')
 
@@ -137,6 +135,8 @@ DataMapper.auto_upgrade!
 set :show_exceptions, :after_handler
 
 class Main < Sinatra::Base
+  enable :sessions
+
   include Globals
   register Sinatra::Contrib
   register Gon::Sinatra
@@ -164,15 +164,23 @@ class Main < Sinatra::Base
   post '/signup' do
     try(500) do
       hash_params = hash_from_request(request)
-      crypted_password = BCrypt::Password.create(hash_params["password"])
-      @user = User.new("name" => hash_params["username"], "password" => crypted_password)
+      crypted_password = BCrypt::Password.create(hash_params[:password])
+      @user = User.new("name" => hash_params[:username], "password" => crypted_password)
       if @user.save
         session[:id] = @user.id
         @current_user = @user
-        redirect '/songs'
+        redirect '/portal'
       else
         halt 500
       end
+    end
+  end
+
+  get '/portal' do
+    if session[:id]
+      erb :portal
+    else
+      erb :login
     end
   end
 
@@ -186,13 +194,13 @@ class Main < Sinatra::Base
   post '/login' do
     try(500) do
       hash_params = hash_from_request(request)
-      @user = User.first(:name => hash_params["username"])
+      @user = User.first(:name => hash_params[:username])
       if @user
         password = BCrypt::Password.new(@user.password)
-        if password == hash_params["password"]
+        if password == hash_params[:password]
           session[:id] = @user.id
           @current_user = @user
-          redirect '/songs'
+          redirect '/portal'
         else
           # TODO More session error handling
           halt 500
