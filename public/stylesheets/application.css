@@ -5,7 +5,7 @@ html {
 
 body > .container {
   /* Space for header and footer */
-  padding: 60px 15px;
+  padding: 5px 15px 60px 15px;
 }
 
 #content {
@@ -16,19 +16,16 @@ body > .container {
 
 .container {
   max-width: 46rem;
+  padding-top: 5px;
 }
 
 .header {
   padding-top: 1rem;
   padding-bottom: 1rem;
   border-bottom: .05rem solid #e5e5e5;
-  top: 0;
-  right: 0;
-  left: 0;
   padding: 2px;
   margin: auto;
   max-width: 46rem;
-  position: fixed;
 }
 
 .float-right {
