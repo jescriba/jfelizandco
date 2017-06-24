@@ -714,6 +714,7 @@ class Main < Sinatra::Base
   post '/edit_songs_form/:id' do
     protected!
 
+    env["rack.request.form_hash"][:id] = params[:id]
     status, headers, body = call env.merge("PATH_INFO" => "/songs/#{params[:id]}", "REQUEST_METHOD" => "PUT")
     [status, headers, body.map(&:upcase)]
   end

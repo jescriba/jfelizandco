@@ -13,7 +13,7 @@
       <% end %>
       <br>
       Download:
-      <% if @song.lossless_url %>
+      <% if @song.lossless_url && !@song.lossless_url.empty? %>
         <button type="button" class="btn btn-outline-primary" id="lossless-download">Lossless</button>
       <% end %>
       <button type="button" class="btn btn-outline-primary" id="lossy-download">Lossy</button>
