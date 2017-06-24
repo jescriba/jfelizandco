@@ -1,1 +1,20 @@
-<h2 class="form-signin-heading">Portal</h2>
+<script src='/scripts/portal.js' type="text/javascript"></script>
+<h2>Portal</h2>
+<p>Manage content or view your favorites</p>
+<div class="manage-section">
+  <h5>Songs</h5>
+  <input class="btn btn-primary" id="favorite-songs" type="button" value="Favorites">
+  <input class="btn btn-primary" id="create-song" type="button" value="Create">
+  <input class="btn btn-primary" id="update-song" type="button" value="Update">
+  <input class="btn btn-primary" id="delete-song" type="button" value="Delete">
+</div>
+<div class="manage-section">
+  <h5>Albums</h5>
+  <input class="btn btn-primary" id="favorite-albums" type="button" value="Favorites">
+  <input class="btn btn-primary" id="create-album" type="button" value="Create">
+  <input class="btn btn-primary" id="update-album" type="button" value="Update">
+  <input class="btn btn-primary" id="delete-album" type="button" value="Delete">
+</div>
+<form method="post" action="/logout" class="form-signin" id="logout">
+  <button type="submit" class="btn btn-primary btn-block">Logout</button>
+</form>

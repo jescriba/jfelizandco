@@ -186,7 +186,7 @@ class Main < Sinatra::Base
 
   get '/login' do
     if session[:id]
-      redirect '/logout'
+      redirect '/portal'
     end
     erb :login
   end
@@ -597,30 +597,25 @@ class Main < Sinatra::Base
     content_type :json
     protected!
 
-    # TODO Refactor
     try(500) do
       hash_params = hash_from_request(request)
-      artists = []
-      hash_params.keys.each do |key|
-        if key.include?("artist")
-          artists.push(hash_params[key])
-        end
-      end
-      hash_params[:artists] = artists
-      hash_params = hash_params.reduce({}) do |memo, (k, v)|
-        memo.merge({ k.to_sym => v})
+
+      # Get artists from params
+      new_artists_names = artists_names_from_hash(hash_params)
+      new_song_name = hash_params[:name] || ""
+
+      # TODO Handle permissions
+      @song = Song.get(hash_params[:id].to_i)
+
+      new_recorded_at = hash_params[:recorded_at] || ""
+      if !new_recorded_at.empty?
+        @song.recorded_at = DateTime.parse(new_recorded_at)
       end
 
-      new_song_name = hash_params[:name] || ""
-      new_artists_names = hash_params[:artists]
-      @song = Song.get(params[:id].to_i)
-      if !hash_params[:recorded_at].nil? && !hash_params[:recorded_at].empty?
-        new_date = DateTime.parse(hash_params[:recorded_at])
-        @song.recorded_at = new_date
-      end
       if !new_song_name.empty?
         @song.name = new_song_name
       end
+
       for name in new_artists_names
         next if name.nil?
         next if name.empty?
@@ -629,6 +624,7 @@ class Main < Sinatra::Base
           @song.artists << artist
         end
       end
+
       if @song.save
         redirect '/songs'
       else
@@ -805,9 +801,10 @@ class Main < Sinatra::Base
                                           :lossless_url => lossless_public_url,
                                           :is_lossless => !lossless_url.empty?,
                                        })
+     file_url = upload_params[:is_lossless] ? lossless_public_url : lossy_url
 
      s3 = Aws::S3::Resource.new(region: 'us-west-1')
-     s3_object_path = upload_params[:lossless_url].sub(upload_params[:base_url], "")
+     s3_object_path = file_url.sub(upload_params[:base_url], "")
      s3_object = s3.bucket(BUCKET).object(s3_object_path)
 
      # upload
@@ -837,6 +834,16 @@ class Main < Sinatra::Base
 
       # Strip off extension
       file_name.split(".")[0]
+    end
+
+    def artists_names_from_hash(params)
+      artists_names = []
+      params.each do |key, val|
+        if key.to_s.include?("artist")
+          artists_names.push(val)
+        end
+      end
+      artists_names
     end
 
     def hash_from_request(request)
@@ -873,6 +880,7 @@ class Main < Sinatra::Base
         puts "#### ERROR ####"
         puts "###############"
         puts e.to_s
+        puts e.backtrace.join("\n")
         halt error_int
       end
     end
