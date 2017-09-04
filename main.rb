@@ -226,8 +226,10 @@ class Main < Sinatra::Base
     try(404) do
       @artists = Artist.all(:order => :created_at.desc)
       if @artists
-        @artists.to_json
-        erb :artists
+        respond_to do |f|
+          f.html { erb :artists }
+          f.json { @artists.to_json } 
+        end
       else
         halt 404
       end
@@ -255,8 +257,10 @@ class Main < Sinatra::Base
     try(404) do
       @artist = Artist.get(params[:id].to_i)
       if @artist
-        @artist.to_json
-        erb :artist
+        respond_to do |f|
+          f.json { @artist.to_json }
+          f.html { erb :artist }
+        end
       else
         halt 404
       end
@@ -412,8 +416,10 @@ class Main < Sinatra::Base
         end
       end
       if !@song.nil?
-        @song.to_json
-        erb :song
+        respond_to do |f|
+          f.json { @song.to_json }
+          f.html { erb :song }
+        end
       else
         halt 404
       end
@@ -560,8 +566,10 @@ class Main < Sinatra::Base
       @current_user = current_user()
       @song = Song.get(params[:id].to_i)
       if @song
-        @song.to_json
-        erb :song
+        respond_to do |f|
+          f.json { @song.to_json }
+          f.html { erb :song }
+        end
       else
         halt 404
       end
