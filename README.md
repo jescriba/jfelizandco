@@ -2,6 +2,8 @@
 
 RESTful API for accessing music archive on s3
 
+[Deprecating in favor of [MusicArchive](http://www.github.com/jescriba/MusicArchive)]
+
 ## Create
 
 **Artist**
