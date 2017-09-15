@@ -228,7 +228,7 @@ class Main < Sinatra::Base
       if @artists
         respond_to do |f|
           f.html { erb :artists }
-          f.json { @artists.to_json } 
+          f.json { @artists.to_json }
         end
       else
         halt 404
@@ -740,10 +740,22 @@ class Main < Sinatra::Base
     end
   end
 
-  get '/search' do
+  get '/search', :provides => ['html', 'json'] do
     # ui to search song by day/month/year on recorded at
     try(404) do
-      erb :search
+      @songs = []
+      # If no search params return search UI html or empty json
+      if params.empty?
+        respond_to do |f|
+          f.html { erb :search }
+          f.json { [].to_json }
+        end
+      end
+
+      respond_to do |f|
+        f.html { erb :songs }
+        f.json { @songs.to_json }
+      end
     end
   end
 
