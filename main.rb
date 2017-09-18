@@ -752,6 +752,59 @@ class Main < Sinatra::Base
         end
       end
 
+      # TODO Refactor and expand to include albums
+      song_id = params["song-id"]
+      song_name = params["song-name"]
+      artist_id = params["artist-id"]
+      artist_name = params["artist-name"]
+      recorded_start = params["recorded-start"]
+      recorded_end = params["recorded-end"]
+      if song_id
+        song = Song.get(song_id)
+        @songs.push(song) if song
+      else
+        artist = Artist.get(artist_id) if artist_id
+        if artist_name && !artist_name.empty? && !artist
+          artist = Artist.all(:name.like => "%#{artist_name}%")
+        end
+
+        if artist
+          @songs = artist.songs
+        elsif song_name && !song_name.empty?
+          @songs = Song.all(:name.like => "%#{song_name}%")
+        end
+
+        recorded_start = DateTime.parse(recorded_start) if recorded_start
+        recorded_end = DateTime.parse(recorded_end) if recorded_end
+
+        if recorded_start && recorded_end
+          if @songs
+            @songs.select! { |song| song.recorded_at < recorded_end && song.recorded_at > recorded_start if song.recorded_at }
+          else
+            @songs = Song.all(:recorded_at.gt => recorded_start, :recorded_at.lt => recorded_end)
+          end
+        end
+
+        if recorded_start
+          if @songs
+            @songs.select! { |song| song.recorded_at > recorded_start if song.recorded_at }
+          else
+            @songs = Song.all(:recorded_at.gt => recorded_start)
+          end
+        end
+
+        if recorded_end
+          if @songs
+            @songs.select! { |song| song.recorded_at < recorded_end if song.recorded_at }
+          else
+            @songs = Song.all(:recorded_at.lt => recorded_end)
+          end
+        end
+
+        # If still no matches return empty
+        @songs = [] unless @songs
+      end
+
       respond_to do |f|
         f.html { erb :songs }
         f.json { @songs.to_json }
