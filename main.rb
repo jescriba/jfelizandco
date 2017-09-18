@@ -778,26 +778,24 @@ class Main < Sinatra::Base
         recorded_end = DateTime.parse(recorded_end) if recorded_end
 
         if recorded_start && recorded_end
-          if @songs
+          if !@songs.empty?
             @songs.select! { |song| song.recorded_at < recorded_end && song.recorded_at > recorded_start if song.recorded_at }
           else
             @songs = Song.all(:recorded_at.gt => recorded_start, :recorded_at.lt => recorded_end)
           end
-        end
-
-        if recorded_start
-          if @songs
-            @songs.select! { |song| song.recorded_at > recorded_start if song.recorded_at }
+        else
+          if recorded_start
+            if !@songs.empty?
+              @songs.select! { |song| song.recorded_at > recorded_start if song.recorded_at }
+            else
+              @songs = Song.all(:recorded_at.gt => recorded_start)
+            end
           else
-            @songs = Song.all(:recorded_at.gt => recorded_start)
-          end
-        end
-
-        if recorded_end
-          if @songs
-            @songs.select! { |song| song.recorded_at < recorded_end if song.recorded_at }
-          else
-            @songs = Song.all(:recorded_at.lt => recorded_end)
+            if !@songs.empty?
+              @songs.select! { |song| song.recorded_at < recorded_end if song.recorded_at }
+            else
+              @songs = Song.all(:recorded_at.lt => recorded_end)
+            end
           end
         end
 
