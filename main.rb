@@ -790,7 +790,7 @@ class Main < Sinatra::Base
             else
               @songs = Song.all(:recorded_at.gt => recorded_start)
             end
-          else
+          elsif recorded_end
             if !@songs.empty?
               @songs.select! { |song| song.recorded_at < recorded_end if song.recorded_at }
             else
