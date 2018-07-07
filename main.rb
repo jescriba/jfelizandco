@@ -567,7 +567,7 @@ class Main < Sinatra::Base
       @song = Song.get(params[:id].to_i)
       if @song
         respond_to do |f|
-          f.json { @song.to_json }
+          f.json { @song.to_json(:methods => :artists) }
           f.html { erb :song }
         end
       else
